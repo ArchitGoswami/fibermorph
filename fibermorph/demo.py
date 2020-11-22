@@ -197,7 +197,7 @@ def sim_ellipse(output_directory, im_width_px, im_height_px, min_diam_um, max_di
     im_path = pathlib.Path(output_directory).joinpath(name + ".tiff")
     df_path = pathlib.Path(output_directory).joinpath(name + ".csv")
 
-    data = {'ID': [name], 'area': [area], 'eccentricity': [eccentricity], 'ref_min_diam': [min_diam_um],
+    data = {'ID': [name], 'ref_area': [area], 'ref_eccentricity': [eccentricity], 'ref_min_diam': [min_diam_um],
             'ref_max_diam': [max_diam_um]}
 
     df = pd.DataFrame(data)
@@ -269,7 +269,7 @@ def validation_section(output_location, repeats, jobs=2):
     sim_ellipse_sum_df = pd.concat(df_list)
     sim_ellipse_sum_df.set_index('ID', inplace=True)
 
-    with pathlib.Path(main_output_path).joinpath("summary_" + testname + ".csv") as savename:
+    with pathlib.Path(main_output_path).joinpath("summary_ref_sim_values" + testname + ".csv") as savename:
         sim_ellipse_sum_df.to_csv(savename)
     
     return main_output_path
