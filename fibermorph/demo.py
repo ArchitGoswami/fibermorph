@@ -23,6 +23,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from fibermorph import dummy_data
 from fibermorph import fibermorph
 from joblib import Parallel, delayed
+# from PIL import Image
 
 
 # %% functions
@@ -182,32 +183,17 @@ def sim_ellipse(output_directory, im_width_px, im_height_px, min_diam_um, max_di
     
     min_rad_px = min_rad_um * px_per_um
     max_rad_px = max_rad_um * px_per_um
-    
-    # generate array of ones (will show up as white background)
-    img = np.ones(imsize_px, dtype=np.uint8)
-    
-    # generate ellipse in center of image
-    rr, cc = draw.ellipse(im_height_px / 2, im_width_px / 2, min_rad_px, max_rad_px, shape=img.shape,
-                          rotation=np.deg2rad(angle_deg))
-    img[rr, cc] = 0
-    
-    fig = plt.figure(frameon=False)
-    fig.set_size_inches(im_width_inch, im_height_inch)
-    ax = plt.Axes(fig, [0, 0, 1, 1])
-    ax.set_axis_off()
-    fig.add_axes(ax)
-    
+
     p1 = geometry.Point((im_height_px / px_per_um) / 2, (im_width_px / px_per_um) / 2)
     e1 = geometry.Ellipse(p1, hradius=max_rad_um, vradius=min_rad_um)
     area = sympy.N(e1.area)
     eccentricity = e1.eccentricity
-    ax.imshow(img, cmap="gray", aspect='auto')
-    
+
     jetzt = datetime.now()
     timestamp = jetzt.strftime("%b%d_%H%M_%S_%f")
-    
+
     name = "sim_ellipse_" + str(timestamp)
-    
+
     im_path = pathlib.Path(output_directory).joinpath(name + ".tiff")
     df_path = pathlib.Path(output_directory).joinpath(name + ".csv")
 
@@ -215,10 +201,25 @@ def sim_ellipse(output_directory, im_width_px, im_height_px, min_diam_um, max_di
             'ref_max_diam': [max_diam_um]}
 
     df = pd.DataFrame(data)
-    
+
     df.to_csv(df_path)
-    
+
+    # generate array of ones (will show up as white background)
+    img = np.ones(imsize_px, dtype=np.uint8)
+
+    # generate ellipse in center of image
+    rr, cc = draw.ellipse(im_height_px / 2, im_width_px / 2, min_rad_px, max_rad_px, shape=img.shape,
+                          rotation=np.deg2rad(angle_deg))
+    img[rr, cc] = 0
+
     plt.ioff()
+    fig = plt.figure(frameon=False)
+    fig.set_size_inches(im_width_inch, im_height_inch)
+    ax = plt.Axes(fig, [0, 0, 1, 1])
+    ax.set_axis_off()
+    fig.add_axes(ax)
+    ax.imshow(img, cmap="gray", aspect='auto')
+
     fig.savefig(fname=im_path, dpi=dpi)
     plt.cla()
     plt.close()
@@ -238,19 +239,25 @@ def validation_section(output_location, repeats, jobs=2):
     
     # create list of random variables from range
     def gen_ellipse_data():
-        min_diam_um = random.uniform(30, 120)
+        max_diam_um = random.uniform(50, 130)
         ecc = random.uniform(0.0, 1.0)
         # min_diam_um = random.uniform(30, max_diam_um)
-        max_diam_um = geometry.Ellipse(geometry.Point(0,0), vradius=min_diam_um, eccentricity=ecc).hradius
+        min_diam_um = geometry.Ellipse(geometry.Point(0,0), hradius=max_diam_um, eccentricity=ecc).vradius
         angle_deg = random.randint(0, 360)
-        list = [max_diam_um, min_diam_um, angle_deg]
+        list = [min_diam_um, max_diam_um, angle_deg]
         return list
     
     tempdf = [gen_ellipse_data() for i in range(repeats)]
     
-    gen_ellipse_df = pd.DataFrame(tempdf, columns=['max_diam_um', 'min_diam_um', 'angle_deg'])
-    
+    gen_ellipse_df = pd.DataFrame(tempdf, columns=['min_diam_um', 'max_diam_um', 'angle_deg'])
+
     df_list = []
+
+    # with fibermorph.tqdm_joblib(tqdm(desc="Generating ellipses", unit="datasets", leave=True, total=len(tempdf), miniters=1)) as progress_bar:
+    #     progress_bar.monitor_interval = 1
+    #     df_list = Parallel(n_jobs=jobs, verbose=0)(delayed(sim_ellipse)(dummy_dir, 5200, 3900, row[0], row[1], 4.25, row[2]) for row in tempdf)
+    #
+
     # for index, row in tqdm(gen_ellipse_df.iterrows(), desc="Generating ellipses", position=0, unit="datasets", leave=True):
     #     df = sim_ellipse(dummy_dir, 5200, 3900, row['min_diam_um'], row['max_diam_um'], 4.25, row['angle_deg'])
     #     df_list.append(df)
@@ -267,7 +274,8 @@ def validation_section(output_location, repeats, jobs=2):
     
     return main_output_path
 
-# validation_section(output_location="/Users/tpl5158/2020_HairPheno_manuscript/data/raw/fibermorph_input/validation_simulated_hair/section", repeats=100, jobs=4)
+
+# validation_section(output_location="/Users/tpl5158/2020_HairPheno_manuscript/data/raw/fibermorph_input/validation_simulated_hair/section", repeats=100, jobs=6)
 
 # %% Main modules
 
