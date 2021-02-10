@@ -22,7 +22,7 @@ import joblib
 import skimage.exposure
 import skimage.measure
 import skimage.morphology
-from PIL import Image
+from PIL import Image # helps importing data into numpy arrays
 from joblib import Parallel, delayed
 from matplotlib import pyplot as plt
 from scipy import ndimage
@@ -589,7 +589,7 @@ def filter_curv(input_file, output_path, save_img):
 
     Returns
     -------
-    filter_img: np.ndarray
+    filter_img: np.ndarrayf
         The filtered image.
     im_name: str
         A string with the image name.
@@ -1329,16 +1329,20 @@ def imread(input_file, use_skimage=False):
 
     """
     input_path = pathlib.Path(input_file)
+
+    # If True, convert color images to gray-scale (64-bit floats). 
+    # Images that are already in gray-scale format are not converted
+
     if use_skimage:
         try:
-            img_float = skimage.io.imread(input_file, as_gray=True)
-            img = skimage.img_as_ubyte(img_float)
+            img_float = skimage.io.imread(input_file, as_gray=True) # img_float = img_arrayndarray The different color bands/channels are stored in the third dimension, such that a gray-image is MxN, an RGB-image MxNx3 and an RGBA-image MxNx4.
+            img = skimage.img_as_ubyte(img_float) # Convert an image to 8-bit unsigned integer format.
         except ValueError:
-            img = np.array(Image.open(str(input_path)).convert('L'))
+            img = np.array(Image.open(str(input_path)).convert('L')) # importing imagge into numpy arrays using given path of image
     else:
         img = np.array(Image.open(str(input_path)).convert('L'))
-    im_name = input_path.stem
-    return img, im_name
+    im_name = input_path.stem # Returns the filename identified by the generic-format path stripped of its extension.
+    return img, im_name #
 
 
 # # @timing
