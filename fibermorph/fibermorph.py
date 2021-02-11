@@ -599,7 +599,7 @@ def filter_curv(input_file, output_path, save_img):
     # create pathlib object for input Image
     input_path = pathlib.Path(input_file)
     
-    gray_img, im_name = imread(input_path)
+    gray_img, im_name = imread(input_path) #gets the image as its numpy form (int and float) and location (String)
     
     # # extract image name
     # im_name = input_path.stem
@@ -611,11 +611,12 @@ def filter_curv(input_file, output_path, save_img):
     
     # use frangi ridge filter to find hairs, the output will be inverted
     filter_img = skimage.filters.frangi(gray_img)
-    type(filter_img)
+    type(filter_img) 
     # print("Image size is:", filter_img.shape)
     
     if save_img:
-        output_path = make_subdirectory(output_path, append_name="filtered")
+        output_path = make_subdirectory(output_path, append_name="filtered") 
+        
         # inverting and saving the filtered image
         img_inv = skimage.util.invert(filter_img)
         with pathlib.Path(output_path).joinpath(im_name + ".tiff") as save_path:
@@ -1342,7 +1343,7 @@ def imread(input_file, use_skimage=False):
     else:
         img = np.array(Image.open(str(input_path)).convert('L'))
     im_name = input_path.stem # Returns the filename identified by the generic-format path stripped of its extension.
-    return img, im_name #
+    return img, im_name # image as np and image name (path) is returned
 
 
 # # @timing
